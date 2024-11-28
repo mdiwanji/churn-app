@@ -31,31 +31,32 @@ param_grid = {
 }
 
 # Create a RandomForestClassifier
-rf_classifier = RandomForestClassifier(random_state=42)
+rf_classifier = RandomForestClassifier(random_state=42, n_estimators=200, max_depth=5)
 
 # Use GridSearchCV to find the best hyperparameters
-grid_search = GridSearchCV(estimator=rf_classifier, param_grid=param_grid, cv=5, scoring='f1') #using f1 as scoring metric
-grid_search.fit(X_train, y_train)
+#grid_search = GridSearchCV(estimator=rf_classifier, param_grid=param_grid, cv=5, scoring='f1') #using f1 as scoring metric
+#grid_search.fit(X_train, y_train)
 
 # Get the best model
-best_rf_classifier = grid_search.best_estimator_
+#best_rf_classifier = grid_search.best_estimator_
 
 # Make predictions using the best model
-y_pred = best_rf_classifier.predict(X_test)
+rf_classifier.fit(X_train, y_train)
+y_pred = rf_classifier.predict(X_test)
 
 # Evaluate the best model
 accuracy = accuracy_score(y_test, y_pred)
 recall = recall_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
 
-print(f"Best Hyperparameters: {grid_search.best_params_}")
+#print(f"Best Hyperparameters: {grid_search.best_params_}")
 print(f"Accuracy: {accuracy}")
 print(f"Recall: {recall}")
 print(f"F1-score: {f1}")
 
 # Get the best model
-best_rf_classifier = grid_search.best_estimator_
+#best_rf_classifier = grid_search.best_estimator_
 
 # Save the best model as a pickle file
 filename = 'rf_model.pkl'
-dump(best_rf_classifier, filename)
+dump(rf_classifier, filename)
