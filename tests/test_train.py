@@ -1,64 +1,78 @@
 import os
+import pytest
 import pandas as pd
-from joblib import load
+from train import (
+    load_data,
+    select_features,
+    split_data,
+    train_model,
+    evaluate_model,
+    save_model
+)
 
-# Define the features used by the model
-SELECTED_FEATURES = ['Age', 'Total_Purchase', 'Account_Manager', 'Years', 'Num_Sites']
+@pytest.fixture
+def csv_file():
+    """Fixture for the data file path."""
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(BASE_DIR, 'data/customer_churn.csv')
 
-def load_model(model_path='rf_model.pkl'):
-    """Load the pre-trained model from a file."""
-    model = load(model_path)
-    return model
+@pytest.fixture
+def df(csv_file):
+    """Fixture to load the DataFrame."""
+    return load_data(csv_file)
 
-def prepare_data(input_data):
-    """Prepare input data for prediction."""
-    # Ensure input_data is a DataFrame
-    if isinstance(input_data, dict):
-        input_data = pd.DataFrame([input_data])
-    elif isinstance(input_data, list):
-        input_data = pd.DataFrame(input_data)
-    elif not isinstance(input_data, pd.DataFrame):
-        raise ValueError("Input data must be a dict, list of dicts, or a pandas DataFrame.")
+@pytest.fixture
+def features_and_target(df):
+    """Fixture to get features and target."""
+    selected_features = ['Age', 'Total_Purchase', 'Account_Manager', 'Years', 'Num_Sites']
+    X, y = select_features(df, selected_features, 'Churn')
+    return X, y
 
-    # Check if all required features are present
-    missing_features = [feature for feature in SELECTED_FEATURES if feature not in input_data.columns]
-    if missing_features:
-        raise ValueError(f"Missing features: {missing_features}")
+def test_load_data(csv_file):
+    """Test the load_data function."""
+    df = load_data(csv_file)
+    assert not df.empty, "DataFrame should not be empty"
+    assert 'Churn' in df.columns, "'Churn' column should be in DataFrame"
 
-    # Select and reorder the required features
-    input_data = input_data[SELECTED_FEATURES]
+def test_select_features(features_and_target):
+    """Test the select_features function."""
+    X, y = features_and_target
+    assert not X.empty, "Features DataFrame should not be empty"
+    assert not y.empty, "Target Series should not be empty"
+    assert X.shape[0] == y.shape[0], "Features and target should have the same number of rows"
 
-    return input_data
+def test_split_data(features_and_target):
+    """Test the split_data function."""
+    X, y = features_and_target
+    X_train, X_test, y_train, y_test = split_data(X, y)
+    assert len(X_train) > 0, "X_train should not be empty"
+    assert len(X_test) > 0, "X_test should not be empty"
+    assert len(y_train) > 0, "y_train should not be empty"
+    assert len(y_test) > 0, "y_test should not be empty"
 
-def make_prediction(model, input_data):
-    """Make predictions using the loaded model."""
-    predictions = model.predict(input_data)
-    probabilities = model.predict_proba(input_data)
-    return predictions, probabilities
+def test_train_model(features_and_target):
+    """Test the train_model function."""
+    X, y = features_and_target
+    X_train, _, y_train, _ = split_data(X, y)
+    model = train_model(X_train, y_train)
+    assert model is not None, "Model should not be None"
+    assert hasattr(model, 'predict'), "Model should have a 'predict' method"
 
-def main():
-    # Load the model
-    model = load_model()
+def test_evaluate_model(features_and_target):
+    """Test the evaluate_model function."""
+    X, y = features_and_target
+    X_train, X_test, y_train, y_test = split_data(X, y)
+    model = train_model(X_train, y_train)
+    accuracy, recall, f1 = evaluate_model(model, X_test, y_test)
+    assert 0 <= accuracy <= 1, "Accuracy should be between 0 and 1"
+    assert 0 <= recall <= 1, "Recall should be between 0 and 1"
+    assert 0 <= f1 <= 1, "F1-score should be between 0 and 1"
 
-    # Example input data
-    new_data = [
-        {'Age': 30, 'Total_Purchase': 5000, 'Account_Manager': 0, 'Years': 2, 'Num_Sites': 8},
-        {'Age': 45, 'Total_Purchase': 15000, 'Account_Manager': 1, 'Years': 10, 'Num_Sites': 15}
-    ]
-
-    # Prepare the data
-    input_data = prepare_data(new_data)
-
-    # Make predictions
-    predictions, probabilities = make_prediction(model, input_data)
-
-    # Display the results
-    for i in range(len(input_data)):
-        print(f"Client {i+1}:")
-        print(f"  Input Data: {input_data.iloc[i].to_dict()}")
-        print(f"  Prediction: {'Churn' if predictions[i] == 1 else 'No Churn'}")
-        print(f"  Probability of Churn: {probabilities[i][1]:.2f}")
-        print("---")
-
-if __name__ == '__main__':
-    main()
+def test_save_model(tmpdir, features_and_target):
+    """Test the save_model function."""
+    X, y = features_and_target
+    X_train, _, y_train, _ = split_data(X, y)
+    model = train_model(X_train, y_train)
+    filename = tmpdir.join('rf_model_test.pkl')
+    save_model(model, str(filename))
+    assert os.path.exists(str(filename)), "Model file should exist"
