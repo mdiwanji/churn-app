@@ -3,7 +3,6 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, recall_score, f1_score
 import pandas as pd
-import matplotlib.pyplot as plt
 from joblib import dump
 
 # Download the CSV file from the GitHub URL
