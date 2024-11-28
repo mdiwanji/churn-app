@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churn Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .result {
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        .result.success {
+            color: green;
+        }
+        .result.failure {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="card p-4">
+        <h1 class="text-center mb-4">Churn Prediction with Random Forest</h1>
+        <form id="prediction-form">
+            <div class="mb-3">
+                <label for="age" class="form-label">Age</label>
+                <input type="number" class="form-control" id="age" placeholder="Enter age" required>
+            </div>
+            <div class="mb-3">
+                <label for="account_manager" class="form-label">Account Manager</label>
+                <select class="form-control" id="account_manager" required>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="years" class="form-label">Years</label>
+                <input type="number" class="form-control" id="years" placeholder="Enter years" required>
+            </div>
+            <div class="mb-3">
+                <label for="num_sites" class="form-label">Number of Sites</label>
+                <input type="number" class="form-control" id="num_sites" placeholder="Enter number of sites" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Predict</button>
+        </form>
+        <div class="mt-4">
+            <div id="result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Collect input data
+            const data = {
+                Age: parseInt(document.getElementById('age').value),
+                Account_Manager: parseInt(document.getElementById('account_manager').value),
+                Years: parseInt(document.getElementById('years').value),
+                Num_Sites: parseInt(document.getElementById('num_sites').value)
+            };
+
+            try {
+                // Call the API
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Handle the response
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+                console.log(result.prediction)
+                if (result.prediction === "No Churn") {
+                    resultDiv.textContent = "The customer is not likely to churn!";
+                    resultDiv.className = "result success";
+                } else if (result.prediction === "Churn") {
+                    resultDiv.textContent = "The customer is likely to churn!";
+                    resultDiv.className = "result failure";
+                } else {
+                    resultDiv.textContent = "Unexpected result.";
+                    resultDiv.className = "result";
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = "result";
+            }
+        });
+    </script>
+</body>
+</html>
