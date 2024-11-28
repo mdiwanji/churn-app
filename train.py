@@ -5,57 +5,72 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score
 import pandas as pd
 from joblib import dump
 
-# Download the CSV file from the GitHub URL
-# Paths for model and scaler
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-csv_file = os.path.join(BASE_DIR, 'data/customer_churn.csv')
+def load_data(csv_file):
+    """Load data from a CSV file into a pandas DataFrame."""
+    if not os.path.exists(csv_file):
+        raise FileNotFoundError(f"CSV file not found at path: {csv_file}")
+    df = pd.read_csv(csv_file)
+    return df
 
-# Load the CSV file into a pandas DataFrame
-df = pd.read_csv(csv_file)
+def select_features(df, selected_features, target_column):
+    """Select features and target from DataFrame."""
+    X = df[selected_features]
+    y = df[target_column]
+    return X, y
 
-# Select specified features
-selected_features = ['Age', 'Total_Purchase','Account_Manager', 'Years', 'Num_Sites']
+def split_data(X, y, test_size=0.2, random_state=42):
+    """Split the data into training and testing sets."""
+    return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-# Prepare data
-X = df[selected_features]
-y = df['Churn']
+def train_model(X_train, y_train, random_state=42, n_estimators=200, max_depth=5):
+    """Train the RandomForestClassifier model."""
+    rf_classifier = RandomForestClassifier(
+        random_state=random_state,
+        n_estimators=n_estimators,
+        max_depth=max_depth
+    )
+    rf_classifier.fit(X_train, y_train)
+    return rf_classifier
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def evaluate_model(model, X_test, y_test):
+    """Evaluate the model's performance."""
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    return accuracy, recall, f1
 
-# Define the parameter grid for hyperparameter tuning
-param_grid = {
-    'n_estimators': [50, 100, 200],
-    'max_depth': [None, 5, 10]
-}
+def save_model(model, filename):
+    """Save the trained model to a file."""
+    dump(model, filename)
 
-# Create a RandomForestClassifier
-rf_classifier = RandomForestClassifier(random_state=42, n_estimators=200, max_depth=5)
+def main():
+    # Paths for model and data
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    csv_file = os.path.join(BASE_DIR, 'data/customer_churn.csv')
 
-# Use GridSearchCV to find the best hyperparameters
-#grid_search = GridSearchCV(estimator=rf_classifier, param_grid=param_grid, cv=5, scoring='f1') #using f1 as scoring metric
-#grid_search.fit(X_train, y_train)
+    # Load data
+    df = load_data(csv_file)
 
-# Get the best model
-#best_rf_classifier = grid_search.best_estimator_
+    # Select features and target
+    selected_features = ['Age', 'Total_Purchase', 'Account_Manager', 'Years', 'Num_Sites']
+    X, y = select_features(df, selected_features, 'Churn')
 
-# Make predictions using the best model
-rf_classifier.fit(X_train, y_train)
-y_pred = rf_classifier.predict(X_test)
+    # Split data
+    X_train, X_test, y_train, y_test = split_data(X, y)
 
-# Evaluate the best model
-accuracy = accuracy_score(y_test, y_pred)
-recall = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
+    # Train model
+    model = train_model(X_train, y_train)
 
-#print(f"Best Hyperparameters: {grid_search.best_params_}")
-print(f"Accuracy: {accuracy}")
-print(f"Recall: {recall}")
-print(f"F1-score: {f1}")
+    # Evaluate model
+    accuracy, recall, f1 = evaluate_model(model, X_test, y_test)
+    print(f"Accuracy: {accuracy}")
+    print(f"Recall: {recall}")
+    print(f"F1-score: {f1}")
 
-# Get the best model
-#best_rf_classifier = grid_search.best_estimator_
+    # Save model
+    filename = 'rf_model.pkl'
+    save_model(model, filename)
 
-# Save the best model as a pickle file
-filename = 'rf_model.pkl'
-dump(rf_classifier, filename)
+if __name__ == '__main__':
+    main()
