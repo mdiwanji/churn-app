@@ -51,5 +51,5 @@ jobs:
       run: eb init -p docker churn-app-mehul --region eu-west-1
 
     - name: Deploy to Elastic Beanstalk
-      run: eb deploy Churn-flask-md-env-1
+      run: eb deploy Churn-app-mehul-env
 
