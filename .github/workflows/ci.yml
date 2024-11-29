@@ -27,14 +27,6 @@ jobs:
       run: |
         echo "PYTHONPATH=${PYTHONPATH}:$(pwd)" >> $GITHUB_ENV
 
-    - name: Run training script
-      run: |
-        python train.py
-
-    - name: Run tests
-      run: |
-        pytest
-
     - name: Install AWS Elastic Beanstalk CLI
       run: |
         sudo apt-get update
@@ -53,7 +45,7 @@ jobs:
       run: docker build -t churn-app .
     
     - name: Validate the model in Docker
-      run: docker run churn-app python validate.py
+      run: docker run churn-app python train.py
     
     - name: Run Tests in Docker
       run: docker run churn-app pytest -v
