@@ -45,7 +45,7 @@ jobs:
       run: docker build -t churn-app-mehul .
 
     - name: Check path
-      run: docker run churn-app-mehulp ls -R /app
+      run: docker run churn-app-mehul ls -R /app
       
     - name: Run Tests in Docker
       run: docker run churn-app-mehul pytest -v
