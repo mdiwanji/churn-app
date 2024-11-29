@@ -52,4 +52,3 @@ jobs:
 
     - name: Deploy to Elastic Beanstalk
       run: eb deploy Churn-app-mehul-env
-
