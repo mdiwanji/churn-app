@@ -47,3 +47,9 @@ jobs:
     - name: Run Tests in Docker
       run: docker run churn-app-mehul pytest -v
 
+    - name: Initialize Elastic Beanstalk Application
+      run: eb init -p docker churn-app-mehul --region eu-west-1
+
+    - name: Deploy to Elastic Beanstalk
+      run: eb deploy Churn-flask-md-env-1
+
