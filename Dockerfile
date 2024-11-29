@@ -19,5 +19,8 @@ ENV PYTHONPATH /app
 # Exécuter le script pour entraîner le modèle et générer rf_model.pkl
 RUN python train.py
 
+# Exposer le port utilisé par Flask
+EXPOSE 5000
+
 # Commande pour démarrer l'application Flask
 CMD ["python", "app.py"]
