@@ -4,16 +4,19 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Copy application files
-COPY . /app
+# Copy requirements file
+COPY requirements.txt /app/
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Exposer le port utilisé par Flask
-EXPOSE 5000
+# Copy all application files, including tests
+COPY . /app
 
-# Exécuter le script pour entraîner le modèle et générer churn_model_clean.pkl
+# Set environment variable PYTHONPATH to /app
+ENV PYTHONPATH /app
+
+# Exécuter le script pour entraîner le modèle et générer rf_model.pkl
 RUN python train.py
 
 # Commande pour démarrer l'application Flask
