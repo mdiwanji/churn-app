@@ -42,11 +42,11 @@ jobs:
         aws-region: eu-west-1
     
     - name: Build Docker Image
-      run: docker build -t churn-app .
+      run: docker build -t churn-app-mehul .
 
     - name: Check path
-      run: docker run churn-app sh -c "apt-get update && apt-get install -y tree && tree /app"
+      run: docker run churn-app-mehulp ls -R /app
       
     - name: Run Tests in Docker
-      run: docker run churn-app pytest -v
+      run: docker run churn-app-mehul pytest -v
 
